@@ -50,6 +50,32 @@ describe ActiveRecordTranslated::Translated do
         end
       end
     end
+
+    context 'when translated model has an attribute with the same name as translated attribute' do
+      before do
+        I18n.locale = :en
+        ActiveRecord::Base.connection.add_column(:products, :name, :string)
+        Product.reset_column_information
+        product.name = 'default-name'
+      end
+
+      after do
+        ActiveRecord::Base.connection.remove_column(:products, :name)
+        Product.reset_column_information
+      end
+
+      it 'responds with its own (default) attribute value' do
+        expect(product.name).to eq 'default-name'
+      end
+
+      context 'when it has a translation in current locale' do
+        before { product.translations.build(locale: 'en', name: 'en-name') }
+
+        it 'responds with translated attribute value' do
+          expect(product.name).to eq 'en-name'
+        end
+      end
+    end
   end
 
   describe '#order_by_translation' do

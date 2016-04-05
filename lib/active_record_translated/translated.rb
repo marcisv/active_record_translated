@@ -52,6 +52,11 @@ module ActiveRecordTranslated
       def translation(locale)
         translations.detect{|t| t.locale.to_sym == locale }
       end
+
+      def build_translations
+        I18n.available_locales.each{|locale| translations.find_or_initialize_by(locale: locale.to_s) }
+        translations
+      end
     end
 
     def translations_presence

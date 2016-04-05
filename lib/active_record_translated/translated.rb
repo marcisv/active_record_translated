@@ -30,8 +30,10 @@ module ActiveRecordTranslated
           define_method attribute_name do |*args|
             raise ArgumentError if args.count > 1
             locale = args[0] || I18n.locale
-            if translation = translations.detect{|t| t.locale == locale.to_s }
-              translation.send(attribute_name)
+            translation = translations.detect{|t| t.locale == locale.to_s }
+            translated_value = translation && translation.send(attribute_name)
+            if !translated_value.nil?
+              translated_value
             elsif has_attribute?(attribute_name)
               super()
             end

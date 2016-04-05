@@ -64,15 +64,24 @@ describe ActiveRecordTranslated::Translated do
         Product.reset_column_information
       end
 
-      it 'responds with its own (default) attribute value' do
+      it 'responds with its own attribute value' do
         expect(product.name).to eq 'default-name'
       end
 
       context 'when it has a translation in current locale' do
-        before { product.translations.build(locale: 'en', name: 'en-name') }
+        before { product.translations.build(locale: 'en', name: en_name) }
+        let(:en_name) { 'en-name' }
 
         it 'responds with translated attribute value' do
           expect(product.name).to eq 'en-name'
+        end
+
+        context 'when translation in current locale has no value for attribute' do
+          let(:en_name) { nil }
+
+          it 'responds with its own attribute value' do
+            expect(product.name).to eq 'default-name'
+          end
         end
       end
     end
@@ -117,6 +126,12 @@ describe ActiveRecordTranslated::Translated do
         it 'returns product without translations as first' do
           expect(Product.order_by_translation(:name).pluck(:name)).to eq [nil, ru_name_2, ru_name_1]
         end
+
+        # context 'with desc argument' do
+        #   it 'orders descending' do
+        #     expect(Product.order_by_translation(:name, :desc).pluck(:name)).to eq [ru_name_1, ru_name_2, nil]
+        #   end
+        # end
       end
     end
   end

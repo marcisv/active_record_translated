@@ -7,10 +7,11 @@ RSpec.configure do |config|
       t.references :product
       t.string  :locale
       t.string  :name
+      t.string  :description
     end
 
     class Product < ActiveRecord::Base
-      translate :name
+      translate :name, :description
     end
 
     class ProductTranslation < ActiveRecord::Base

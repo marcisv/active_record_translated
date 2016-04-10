@@ -11,7 +11,7 @@ RSpec.configure do |config|
     end
 
     class Product < ActiveRecord::Base
-      translate :name, :description
+      translates :name, :description
     end
 
     class ProductTranslation < ActiveRecord::Base

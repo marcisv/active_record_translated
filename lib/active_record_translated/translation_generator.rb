@@ -20,7 +20,7 @@ module ActiveRecordTranslated
 
     def alter_translateable_model
       inject_into_file translateable_model_path, after: /^class #{translateable_model_name}.*/ do
-        "\n  translate #{translateable_column_properties.map{|properties| ":#{properties.split(':')[0]}" }.join('')}\n"
+        "\n  translates #{translateable_column_properties.map{|properties| ":#{properties.split(':')[0]}" }.join('')}\n"
       end
     end
 

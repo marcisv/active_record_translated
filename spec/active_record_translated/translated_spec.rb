@@ -11,7 +11,7 @@ describe ActiveRecordTranslated::Translated do
     Object.send(:remove_const, :Product)
     eval <<-RUBY
       class Product < ActiveRecord::Base
-        translate :name, :description
+        translates :name, :description
       end
     RUBY
   end

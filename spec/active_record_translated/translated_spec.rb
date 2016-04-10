@@ -6,6 +6,16 @@ describe ActiveRecordTranslated::Translated do
 
   before { I18n.available_locales = [:en, :lv] }
 
+  def reset_translated_model_class!
+    Product.reset_column_information # clear ActiveRecord internal cache
+    Object.send(:remove_const, :Product)
+    eval <<-RUBY
+      class Product < ActiveRecord::Base
+        translate :name, :description
+      end
+    RUBY
+  end
+
   it 'has translations' do
     expect(product).to respond_to :translations
   end
@@ -23,6 +33,33 @@ describe ActiveRecordTranslated::Translated do
       it 'has error for each locale' do
         expect(product).not_to be_valid
         expect(product.errors.count).to eq 2
+      end
+    end
+
+    context 'when columns for default values exist for translated model' do
+      before do
+        column_names.each{|cn| ActiveRecord::Base.connection.add_column(:products, cn, :string) }
+        reset_translated_model_class!
+      end
+
+      after do
+        column_names.each{|cn| ActiveRecord::Base.connection.remove_column(:products, cn) }
+        reset_translated_model_class!
+      end
+
+      context 'when column for default value exists only for one attribute' do
+        let(:column_names) { [:name] }
+
+        it 'has error for each locale' do
+          expect(product).not_to be_valid
+          expect(product.errors.count).to eq 2
+        end
+      end
+
+      context 'when column for default value exists for all attributes' do
+        let(:column_names) { [:name, :description] }
+
+        specify { expect(product).to be_valid }
       end
     end
   end
@@ -55,13 +92,13 @@ describe ActiveRecordTranslated::Translated do
       before do
         I18n.locale = :en
         ActiveRecord::Base.connection.add_column(:products, :name, :string)
-        Product.reset_column_information
+        reset_translated_model_class!
         product.name = 'default-name'
       end
 
       after do
         ActiveRecord::Base.connection.remove_column(:products, :name)
-        Product.reset_column_information
+        reset_translated_model_class!
       end
 
       it 'responds with its own attribute value' do

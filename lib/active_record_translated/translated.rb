@@ -24,7 +24,9 @@ module ActiveRecordTranslated
           ).order("#{joined_table_name}.#{field_name}")
         }
 
-        validate :translations_presence
+        unless attribute_names.all?{|attribute_name| column_names.include?(attribute_name.to_s) }
+          validate :translations_presence
+        end
 
         attribute_names.each do |attribute_name|
           define_method attribute_name do |*args|

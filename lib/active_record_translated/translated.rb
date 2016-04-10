@@ -4,7 +4,7 @@ module ActiveRecordTranslated
     extend ActiveSupport::Concern
 
     included do
-      def self.translate(*attribute_names)
+      def self.translates(*attribute_names)
         has_many :translations, -> { order(locale: :desc) }, {
           class_name: translation_class_name,
           dependent:  :destroy,

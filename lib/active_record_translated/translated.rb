@@ -52,7 +52,7 @@ module ActiveRecordTranslated
       end
 
       def translation(locale)
-        translations.detect{|t| t.locale.to_sym == locale }
+        translations.detect{|t| t.locale.to_sym == locale.to_sym }
       end
 
       def build_translations

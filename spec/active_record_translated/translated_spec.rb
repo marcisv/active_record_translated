@@ -1,20 +1,24 @@
 require 'spec_helper'
 
 describe ActiveRecordTranslated::Translated do
+  let :product_class_definition do
+    class Product < ActiveRecord::Base
+      translates :name, :description
+    end
+  end
+
+  before do
+    if defined?(Product)
+      Product.reset_column_information
+      Object.send(:remove_const, :Product)
+    end
+    product_class_definition
+  end
+
   subject(:product) { Product.new }
   let(:available_locales) { I18n.available_locales }
 
   before { I18n.available_locales = [:en, :lv] }
-
-  def reset_translated_model_class!
-    Product.reset_column_information # clear ActiveRecord internal cache
-    Object.send(:remove_const, :Product)
-    eval <<-RUBY
-      class Product < ActiveRecord::Base
-        translates :name, :description
-      end
-    RUBY
-  end
 
   it 'has translations' do
     expect(product).to respond_to :translations
@@ -37,15 +41,12 @@ describe ActiveRecordTranslated::Translated do
     end
 
     context 'when columns for default values exist for translated model' do
-      before do
+      let(:product_class_definition) do
         column_names.each{|cn| ActiveRecord::Base.connection.add_column(:products, cn, :string) }
-        reset_translated_model_class!
+        super()
       end
 
-      after do
-        column_names.each{|cn| ActiveRecord::Base.connection.remove_column(:products, cn) }
-        reset_translated_model_class!
-      end
+      after { column_names.each{|cn| ActiveRecord::Base.connection.remove_column(:products, cn) } }
 
       context 'when column for default value exists only for one attribute' do
         let(:column_names) { [:name] }
@@ -89,17 +90,17 @@ describe ActiveRecordTranslated::Translated do
     end
 
     context 'when translated model has an attribute with the same name as translated attribute' do
+      let(:product_class_definition) do
+        ActiveRecord::Base.connection.add_column(:products, :name, :string)
+        super()
+      end
+
       before do
         I18n.locale = :en
-        ActiveRecord::Base.connection.add_column(:products, :name, :string)
-        reset_translated_model_class!
         product.name = 'default-name'
       end
 
-      after do
-        ActiveRecord::Base.connection.remove_column(:products, :name)
-        reset_translated_model_class!
-      end
+      after { ActiveRecord::Base.connection.remove_column(:products, :name) }
 
       it 'responds with its own attribute value' do
         expect(product.name).to eq 'default-name'

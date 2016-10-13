@@ -80,7 +80,7 @@ module ActiveRecordTranslated
     def existing_model_names
       unless defined? @existing_model_names
         Rails.application.eager_load!
-        @existing_model_names = ActiveRecord::Base.subclasses.map(&:name)
+        @existing_model_names = ActiveRecord::Base.descendants.reject(&:abstract_class).map(&:name)
       end
       @existing_model_names
     end

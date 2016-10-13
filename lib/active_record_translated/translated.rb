@@ -25,7 +25,7 @@ module ActiveRecordTranslated
         }
 
         unless attribute_names.all?{|attribute_name| column_names.include?(attribute_name.to_s) }
-          validate :translations_presence
+          validate :validate_translations_presence
         end
 
         attribute_names.each do |attribute_name|
@@ -61,7 +61,7 @@ module ActiveRecordTranslated
       end
     end
 
-    def translations_presence
+    def validate_translations_presence
       I18n.available_locales.each do |locale|
         unless translations.any?{|t| t.locale.to_sym == locale.to_sym }
           errors.add(:base, "Translation with locale #{locale} must be present")

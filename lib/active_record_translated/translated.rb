@@ -32,7 +32,7 @@ module ActiveRecordTranslated
           define_method attribute_name do |*args|
             raise ArgumentError if args.count > 1
             locale = args[0] || I18n.locale
-            translation = translations.detect{|t| t.locale == locale.to_s }
+            translation = translations.detect{|t| t.locale.to_sym == locale.to_sym }
             translated_value = translation && translation.send(attribute_name)
             if !translated_value.nil?
               translated_value
@@ -63,7 +63,7 @@ module ActiveRecordTranslated
 
     def translations_presence
       I18n.available_locales.each do |locale|
-        unless translations.any?{|t| t.locale == locale.to_s }
+        unless translations.any?{|t| t.locale.to_sym == locale.to_sym }
           errors.add(:base, "Translation with locale #{locale} must be present")
         end
       end

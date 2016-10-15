@@ -4,7 +4,11 @@ module ActiveRecordTranslated
     extend ActiveSupport::Concern
 
     included do
-      def self.translates(*attribute_names)
+      def self.translates(*args)
+        attribute_names = args.select{|arg| arg.is_a? Symbol }
+        attribute_names_with_options = args.detect{|arg| arg.is_a? Hash } || {}
+        attribute_names += attribute_names_with_options.keys
+
         has_many :translations, -> { order(locale: :desc) }, {
           class_name: translation_class_name,
           dependent:  :destroy,
@@ -24,16 +28,23 @@ module ActiveRecordTranslated
           ).order("#{joined_table_name}.#{field_name}")
         }
 
-        unless attribute_names.all?{|attribute_name| column_names.include?(attribute_name.to_s) }
-          validate :validate_translations_presence
+        attribute_names_with_options.each do |attribute_name, options|
+          if options[:mandatory]
+            I18n.available_locales.each{|locale| validates :"#{attribute_name}_#{locale}", presence: true }
+          end
         end
 
         attribute_names.each do |attribute_name|
+          I18n.available_locales.each do |locale|
+            define_method :"#{attribute_name}_#{locale}" do
+              attribute_translation(attribute_name, locale)
+            end
+          end
+
           define_method attribute_name do |*args|
             raise ArgumentError if args.count > 1
             locale = args[0] || I18n.locale
-            translation = translations.detect{|t| t.locale.to_sym == locale.to_sym }
-            translated_value = translation && translation.send(attribute_name)
+            translated_value = attribute_translation(attribute_name, locale)
             if !translated_value.nil?
               translated_value
             elsif has_attribute?(attribute_name)
@@ -41,6 +52,10 @@ module ActiveRecordTranslated
             end
           end
         end
+      end
+
+      def attribute_translation(attribute_name, locale)
+        translation(locale)&.send(attribute_name)
       end
 
       def self.translation_class_name

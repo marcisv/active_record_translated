@@ -25,42 +25,55 @@ describe ActiveRecordTranslated::Translated do
   end
 
   describe 'validations' do
-    context 'when translations exist for all available locales' do
-      before do
-        available_locales.each{|locale| product.translations.build(locale: locale, name: "#{locale}-name") }
-      end
-
-      specify { expect(product).to be_valid }
+    it 'is valid without translations by default' do
+      expect(product).to be_valid
     end
 
-    context 'when a translations are missing for available locales' do
-      it 'has error for each locale' do
-        expect(product).not_to be_valid
-        expect(product.errors.count).to eq 2
-      end
-    end
-
-    context 'when columns for default values exist for translated model' do
-      let(:product_class_definition) do
-        column_names.each{|cn| ActiveRecord::Base.connection.add_column(:products, cn, :string) }
-        super()
-      end
-
-      after { column_names.each{|cn| ActiveRecord::Base.connection.remove_column(:products, cn) } }
-
-      context 'when column for default value exists only for one attribute' do
-        let(:column_names) { [:name] }
-
-        it 'has error for each locale' do
-          expect(product).not_to be_valid
-          expect(product.errors.count).to eq 2
+    context 'when mandatory option is true for one of attributes' do
+      let :product_class_definition do
+        class Product < ActiveRecord::Base
+          translates :name, description: {mandatory: true}
         end
       end
 
-      context 'when column for default value exists for all attributes' do
-        let(:column_names) { [:name, :description] }
+      context 'when translations do not exist' do
+        it 'has an error for each locale for the field' do
+          expect(product).not_to be_valid
+          expect(product.errors.count).to eq 2
+          expect(product.errors[:description_en]).to be_present
+          expect(product.errors[:description_lv]).to be_present
+        end
+      end
 
-        specify { expect(product).to be_valid }
+      context 'when translation exists for each locale' do
+        let!(:translation_en) { product.translations.build(locale: 'en', description: '') }
+        let!(:translation_lv) { product.translations.build(locale: 'lv', description: '') }
+
+        it 'has an error for each locale for the field' do
+          expect(product).not_to be_valid
+          expect(product.errors.count).to eq 2
+          expect(product.errors[:description_en]).to be_present
+          expect(product.errors[:description_lv]).to be_present
+        end
+
+        context 'when one translations have values' do
+          before { translation_en.description = 'desc-en' }
+
+          it 'has error on field with missing translation' do
+            expect(product).not_to be_valid
+            expect(product.errors.count).to eq 1
+            expect(product.errors[:description_lv]).to be_present
+          end
+        end
+
+        context 'when both translations have values' do
+          before do
+            translation_en.description = 'desc-en'
+            translation_lv.description = 'desc-lv'
+          end
+
+          specify { expect(product).to be_valid }
+        end
       end
     end
   end
@@ -85,6 +98,20 @@ describe ActiveRecordTranslated::Translated do
         available_locales.each do |locale|
           I18n.locale = locale
           expect(product.name).to eq "#{locale}-name"
+        end
+      end
+
+      context 'when attribute name given in hash with options' do
+        let(:product_class_definition) do
+          class Product < ActiveRecord::Base
+            translates name: {mandatory: true}
+          end
+        end
+
+        it 'responds to translated attribute with all locales' do
+          available_locales.each do |locale|
+            expect(product.name(locale)).to eq "#{locale}-name"
+          end
         end
       end
     end

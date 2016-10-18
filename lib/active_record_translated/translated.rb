@@ -15,7 +15,9 @@ module ActiveRecordTranslated
           inverse_of: self.name.underscore.to_sym
         }
 
-        accepts_nested_attributes_for :translations, limit: -> { I18n.available_locales.count }
+        accepts_nested_attributes_for :translations, limit: -> { I18n.available_locales.count }, reject_if: -> attributes {
+          attribute_names.none?{|attribute_name| attributes[attribute_name].present? }
+        }
 
         scope :order_by_translation, -> field_name {
           joined_table_name = "#{I18n.locale}_translations"

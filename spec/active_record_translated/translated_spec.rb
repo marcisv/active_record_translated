@@ -209,6 +209,42 @@ describe ActiveRecordTranslated::Translated do
     end
   end
 
+  describe 'saving translations via nested attributes' do
+    subject(:product) { Product.create(translations_attributes: translations_attributes) }
+
+    let(:translations_attributes) { [{locale: 'lv', name: 'lv-name', description: 'lv-desc'}] }
+
+    it 'saves model with translations' do
+      expect(product).to be_persisted
+      expect(product.translations.count).to eq 1
+      translation = product.translations.first
+      expect(translation.name).to eq 'lv-name'
+      expect(translation.description).to eq 'lv-desc'
+    end
+
+    context 'when translation for only one of attributes is present' do
+      let(:translations_attributes) { [{locale: 'lv', name: 'lv-name', description: ''}] }
+
+      it 'saves model with translation and only present attribute' do
+        expect(product).to be_persisted
+        expect(product.translations.count).to eq 1
+        translation = product.translations.first
+        expect(translation.name).to eq 'lv-name'
+        expect(translation.description).to eq ''
+      end
+    end
+
+    context 'when none of translated attributes is present' do
+      let(:translations_attributes) { [{locale: 'lv', name: '', description: ''}] }
+
+      it 'saves model without translation' do
+        expect(product).to be_persisted
+        expect(product.translations.count).to eq 0
+      end
+    end
+
+  end
+
   describe '#order_by_translation' do
     let!(:available_locales) { I18n.available_locales = [:lv, :ru] }
 

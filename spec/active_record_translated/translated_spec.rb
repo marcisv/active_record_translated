@@ -29,7 +29,7 @@ describe ActiveRecordTranslated::Translated do
       expect(product).to be_valid
     end
 
-    context 'when mandatory option is true for one of attributes' do
+    context 'when mandatory option is true for an attribute' do
       let :product_class_definition do
         class Product < ActiveRecord::Base
           translates :name, description: {mandatory: true}
@@ -73,6 +73,52 @@ describe ActiveRecordTranslated::Translated do
           end
 
           specify { expect(product).to be_valid }
+        end
+      end
+    end
+
+    context 'when mandatory option is :unless_default for an attribute' do
+      let(:product_class_definition) do
+        ActiveRecord::Base.connection.add_column(:products, :description, :string)
+        class Product < ActiveRecord::Base
+          translates :name, description: {mandatory: :unless_default}
+        end
+      end
+
+      after { ActiveRecord::Base.connection.remove_column(:products, :description) }
+
+      context 'when translation with value exists for each locale' do
+        let!(:translation_en) { product.translations.build(locale: 'en', description: 'desc-en') }
+        let!(:translation_lv) { product.translations.build(locale: 'lv', description: 'desc-lv') }
+
+        specify { expect(product).to be_valid }
+      end
+
+      context 'when translations do not exist' do
+        it 'has an error for each locale for the field' do
+          expect(product).not_to be_valid
+          expect(product.errors.count).to eq 2
+          expect(product.errors[:description_en]).to be_present
+          expect(product.errors[:description_lv]).to be_present
+        end
+
+        context 'when default value is empty string' do
+          before { product.description = '' }
+
+          it 'has an error for each locale for the field' do
+            expect(product).not_to be_valid
+            expect(product.errors.count).to eq 2
+            expect(product.errors[:description_en]).to be_present
+            expect(product.errors[:description_lv]).to be_present
+          end
+        end
+
+        context 'when default value exists' do
+          before { product.description = 'desc-default' }
+
+          it 'is valid' do
+            expect(product).to be_valid
+          end
         end
       end
     end

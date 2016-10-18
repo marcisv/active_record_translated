@@ -29,8 +29,13 @@ module ActiveRecordTranslated
         }
 
         attribute_names_with_options.each do |attribute_name, options|
-          if options[:mandatory]
+          case options[:mandatory]
+          when true
             I18n.available_locales.each{|locale| validates :"#{attribute_name}_#{locale}", presence: true }
+          when :unless_default
+            I18n.available_locales.each do |locale|
+              validates :"#{attribute_name}_#{locale}", presence: true, unless: "#{attribute_name}.present?"
+            end
           end
         end
 
@@ -75,14 +80,5 @@ module ActiveRecordTranslated
         translations
       end
     end
-
-    def validate_translations_presence
-      I18n.available_locales.each do |locale|
-        unless translations.any?{|t| t.locale.to_sym == locale.to_sym }
-          errors.add(:base, "Translation with locale #{locale} must be present")
-        end
-      end
-    end
-
   end
 end

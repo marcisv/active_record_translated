@@ -113,6 +113,17 @@ describe ActiveRecordTranslated::Translated do
           end
         end
 
+        context 'when default value is empty string and current locale translation is present' do
+          before { product.description = '' }
+          let!(:translation_en) { product.translations.build(locale: 'en', description: 'desc-en') }
+
+          it 'has an error on other locale field' do
+            expect(product).not_to be_valid
+            expect(product.errors.count).to eq 1
+            expect(product.errors[:description_lv]).to be_present
+          end
+        end
+
         context 'when default value exists' do
           before { product.description = 'desc-default' }
 

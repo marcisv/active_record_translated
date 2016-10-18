@@ -1,6 +1,9 @@
 require 'spec_helper'
 
 describe ActiveRecordTranslated::Translated do
+  let!(:available_locales) { I18n.available_locales = [:en, :lv] }
+  before { I18n.locale = available_locales.first }
+
   let :product_class_definition do
     class Product < ActiveRecord::Base
       translates :name, :description
@@ -16,9 +19,6 @@ describe ActiveRecordTranslated::Translated do
   end
 
   subject(:product) { Product.new }
-  let(:available_locales) { I18n.available_locales }
-
-  before { I18n.available_locales = [:en, :lv] }
 
   it 'has translations' do
     expect(product).to respond_to :translations
@@ -199,7 +199,7 @@ describe ActiveRecordTranslated::Translated do
   end
 
   describe '#order_by_translation' do
-    before { I18n.available_locales = [:lv, :ru] }
+    let!(:available_locales) { I18n.available_locales = [:lv, :ru] }
 
     let(:lv_name_1){ 'A lv' }
     let(:ru_name_1){ 'Z ru' }

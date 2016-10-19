@@ -245,6 +245,23 @@ describe ActiveRecordTranslated::Translated do
 
   end
 
+  describe '#translations_for_available_locales' do
+    subject(:product) { Product.create }
+
+    let!(:available_locales) { I18n.available_locales = [:en, :lv, :ru] }
+
+    let!(:lv_new_translation) { product.translations.build(locale: 'lv', name: 'lv-name!') }
+    let!(:en_persisted_translation) { product.translations.create(locale: 'en', name: 'en-name!') }
+
+    it 'returns existing (new and persisted) translations with new records for missing translations in available locales order' do
+      expect(product.translations_for_available_locales[0]).to eq en_persisted_translation
+      expect(product.translations_for_available_locales[1]).to eq lv_new_translation
+      built_ru_translation = product.translations_for_available_locales[2]
+      expect(built_ru_translation).to be_present
+      expect(built_ru_translation.locale).to eq 'ru'
+    end
+  end
+
   describe '#order_by_translation' do
     let!(:available_locales) { I18n.available_locales = [:lv, :ru] }
 

@@ -81,9 +81,14 @@ module ActiveRecordTranslated
         translations.detect{|t| t.locale.to_sym == locale.to_sym }
       end
 
-      def build_translations
-        I18n.available_locales.each{|locale| translations.find_or_initialize_by(locale: locale.to_s) }
-        translations
+      # For usage in Rails forms to always have all existing translations (new and persisted) together with
+      # new records for missing ones.
+      def translations_for_available_locales
+        result = []
+        I18n.available_locales.each do |locale|
+          result.push translation(locale) || translations.build(locale: locale)
+        end
+        result
       end
     end
   end

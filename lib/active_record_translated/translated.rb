@@ -36,7 +36,7 @@ module ActiveRecordTranslated
             I18n.available_locales.each{|locale| validates :"#{attribute_name}_#{locale}", presence: true }
           when :unless_default
             I18n.available_locales.each do |locale|
-              validates :"#{attribute_name}_#{locale}", presence: true, unless: -> { read_attribute(attribute_name).present? }
+              validates :"#{attribute_name}_#{locale}", presence: true, unless: "default_#{attribute_name}.present?"
             end
           end
         end
@@ -57,6 +57,10 @@ module ActiveRecordTranslated
             elsif has_attribute?(attribute_name)
               super()
             end
+          end
+
+          define_method :"default_#{attribute_name}" do
+            read_attribute(attribute_name)
           end
         end
       end

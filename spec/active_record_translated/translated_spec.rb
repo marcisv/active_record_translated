@@ -43,6 +43,23 @@ describe ActiveRecordTranslated::Translated do
           expect(product.errors[:description_en]).to be_present
           expect(product.errors[:description_lv]).to be_present
         end
+
+        context 'when only one locale in ActiveRecordTranslated mandatory_locales configuration' do
+          let :product_class_definition do
+            ActiveRecordTranslated.mandatory_locales = [:lv]
+            class Product < ActiveRecord::Base
+              translates :name, description: {mandatory: true}
+            end
+          end
+
+          after { ActiveRecordTranslated.mandatory_locales = nil }
+
+          it 'has error only on mandatory locale' do
+            expect(product).not_to be_valid
+            expect(product.errors.count).to eq 1
+            expect(product.errors[:description_lv]).to be_present
+          end
+        end
       end
 
       context 'when translation exists for each locale' do

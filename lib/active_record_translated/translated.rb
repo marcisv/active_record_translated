@@ -33,9 +33,9 @@ module ActiveRecordTranslated
         attribute_names_with_options.each do |attribute_name, options|
           case options[:mandatory]
           when true
-            I18n.available_locales.each{|locale| validates :"#{attribute_name}_#{locale}", presence: true }
+            ActiveRecordTranslated.mandatory_locales.each{|locale| validates :"#{attribute_name}_#{locale}", presence: true }
           when :unless_default
-            I18n.available_locales.each do |locale|
+            ActiveRecordTranslated.mandatory_locales.each do |locale|
               validates :"#{attribute_name}_#{locale}", presence: true, unless: "default_#{attribute_name}.present?"
             end
           end

@@ -52,7 +52,7 @@ module ActiveRecordTranslated
             raise ArgumentError if args.count > 1
             locale = args[0] || I18n.locale
             translated_value = attribute_translation(attribute_name, locale)
-            if !translated_value.nil?
+            if translated_value.present?
               translated_value
             elsif has_attribute?(attribute_name)
               super()

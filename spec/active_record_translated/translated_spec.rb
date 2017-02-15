@@ -222,6 +222,14 @@ describe ActiveRecordTranslated::Translated do
             expect(product.name).to eq 'default-name'
           end
         end
+
+        context 'when translation in current locale has an empty string value for attribute' do
+          let(:en_name) { '' }
+
+          it 'responds with its own attribute value' do
+            expect(product.name).to eq 'default-name'
+          end
+        end
       end
     end
   end

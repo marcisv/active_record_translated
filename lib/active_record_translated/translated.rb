@@ -36,7 +36,7 @@ module ActiveRecordTranslated
             ActiveRecordTranslated.mandatory_locales.each{|locale| validates :"#{attribute_name}_#{locale}", presence: true }
           when :unless_default
             ActiveRecordTranslated.mandatory_locales.each do |locale|
-              validates :"#{attribute_name}_#{locale}", presence: true, unless: "default_#{attribute_name}.present?"
+              validates :"#{attribute_name}_#{locale}", presence: true, unless: -> { send(:"default_#{attribute_name}").present? }
             end
           end
         end

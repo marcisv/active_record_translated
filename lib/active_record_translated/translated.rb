@@ -84,12 +84,19 @@ module ActiveRecordTranslated
       # For usage in Rails forms to always have all existing translations (new and persisted) together with
       # new records for missing ones.
       def translations_for_available_locales
+        translations_for_locales(*I18n.available_locales)
+      end
+
+      # For usage in Rails forms to always have all required translations (new and persisted) together with
+      # new records for missing ones.
+      def translations_for_locales(*args)
         result = []
-        I18n.available_locales.each do |locale|
-          result.push translation(locale) || translations.build(locale: locale)
+        args.each do |locale|
+          result.push(translation(locale) || translations.build(locale: locale))
         end
         result
       end
     end
+
   end
 end

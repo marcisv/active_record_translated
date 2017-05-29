@@ -270,6 +270,34 @@ describe ActiveRecordTranslated::Translated do
 
   end
 
+  describe '#translations_for_locales' do
+    subject(:product) { Product.create }
+
+    let!(:available_locales) { I18n.available_locales = [:en, :lv, :ru] }
+
+    let!(:lv_new_translation) { product.translations.build(locale: 'lv', name: 'lv-name!') }
+    let!(:en_persisted_translation) { product.translations.create(locale: 'en', name: 'en-name!') }
+
+    it 'returns new locale' do
+      expect(product.translations_for_locales(:lv)).to eq [lv_new_translation]
+    end
+
+    it 'returns persisted locale' do
+      expect(product.translations_for_locales(:en)).to eq [en_persisted_translation]
+    end
+
+    it 'builds translation if it does not exist' do
+      expect(product.translations_for_locales(:ru).length).to eq 1
+      ru_translation = product.translations_for_locales(:ru)[0]
+      expect(ru_translation.new_record?).to eq true
+      expect(ru_translation.locale).to eq 'ru'
+    end
+
+    it 'returns combination of multiple translations' do
+      expect(product.translations_for_locales(:en, :lv)).to eq [en_persisted_translation, lv_new_translation]
+    end
+  end
+
   describe '#translations_for_available_locales' do
     subject(:product) { Product.create }
 

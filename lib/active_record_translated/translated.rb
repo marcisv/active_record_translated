@@ -31,14 +31,7 @@ module ActiveRecordTranslated
         }
 
         attribute_names_with_options.each do |attribute_name, options|
-          case options[:mandatory]
-          when true
-            ActiveRecordTranslated.mandatory_locales.each{|locale| validates :"#{attribute_name}_#{locale}", presence: true }
-          when :unless_default
-            ActiveRecordTranslated.mandatory_locales.each do |locale|
-              validates :"#{attribute_name}_#{locale}", presence: true, unless: -> { send(:"default_#{attribute_name}").present? }
-            end
-          end
+          self.validate_translated_attribute_presence(attribute_name, options[:mandatory])
         end
 
         attribute_names.each do |attribute_name|
@@ -61,6 +54,30 @@ module ActiveRecordTranslated
 
           define_method :"default_#{attribute_name}" do
             read_attribute(attribute_name)
+          end
+        end
+      end
+
+      def self.validate_translated_attribute_presence(attribute_name, mandatory_option)
+        case mandatory_option
+        when true
+          ActiveRecordTranslated.mandatory_locales.each { |locale| validates :"#{attribute_name}_#{locale}", presence: true }
+        when :unless_default
+          ActiveRecordTranslated.mandatory_locales.each do |locale|
+            validates :"#{attribute_name}_#{locale}", presence: true, unless: -> { send(:"default_#{attribute_name}").present? }
+          end
+        when Hash
+          mandatory_locales_option = mandatory_option[:locales]
+          if mandatory_locales_option.is_a?(Proc)
+            ActiveRecordTranslated.mandatory_locales.each do |locale|
+              validates :"#{attribute_name}_#{locale}", presence: true, if: -> do
+                mandatory_locales = Array(mandatory_locales_option.call(self)).map(&:to_s)
+                mandatory_locales.include?(locale.to_s)
+              end
+            end
+          elsif mandatory_locales_option.present?
+            mandatory_locales = Array(mandatory_locales_option).map(&:to_s)
+            mandatory_locales.each{ |locale| validates :"#{attribute_name}_#{locale}", presence: true }
           end
         end
       end

@@ -152,6 +152,108 @@ describe ActiveRecordTranslated::Translated do
     end
   end
 
+  context 'when mandatory option is a hash with :locales key' do
+    context 'when the value is a locale' do
+      let(:product_class_definition) do
+        class Product < ActiveRecord::Base
+          translates name: {mandatory: {locales: :lv}}
+        end
+      end
+
+      it 'has an error for the locale within locales hash' do
+        expect(product).not_to be_valid
+        expect(product.errors.count).to eq 1
+        expect(product.errors[:name_lv]).to be_present
+      end
+
+      context 'when translation exists for the locale' do
+        let!(:translation_lv) { product.translations.build(locale: 'lv', name: 'name-lv') }
+
+        it 'is valid' do
+          expect(product).to be_valid
+        end
+      end
+    end
+
+    context 'when the value is an array with locales' do
+      let(:product_class_definition) do
+        class Product < ActiveRecord::Base
+          translates name: {mandatory: {locales: [:lv, :en]}}
+        end
+      end
+
+      it 'has an error for each of the locales' do
+        expect(product).not_to be_valid
+        expect(product.errors.count).to eq 2
+        expect(product.errors[:name_lv]).to be_present
+        expect(product.errors[:name_en]).to be_present
+      end
+
+      context 'when translation exists for the locales' do
+        let!(:translation_en) { product.translations.build(locale: 'en', name: 'name-en') }
+        let!(:translation_lv) { product.translations.build(locale: 'lv', name: 'name-lv') }
+
+        it 'is valid' do
+          expect(product).to be_valid
+        end
+      end
+    end
+
+    context 'when the value is a proc that returns a locale' do
+      let(:product_class_definition) do
+        class Product < ActiveRecord::Base
+          translates name: {mandatory: {locales: -> product { product.get_locale }}}
+
+          def get_locale
+            'lv'
+          end
+        end
+      end
+
+      it 'has an error for the locale returned by proc' do
+        expect(product).not_to be_valid
+        expect(product.errors.count).to eq 1
+        expect(product.errors[:name_lv]).to be_present
+      end
+
+      context 'when translation exists for the locale returned by proc' do
+        let!(:translation_lv) { product.translations.build(locale: 'lv', name: 'name-lv') }
+
+        it 'is valid' do
+          expect(product).to be_valid
+        end
+      end
+    end
+
+    context 'when the value is a proc that returns an array of locales' do
+      let(:product_class_definition) do
+        class Product < ActiveRecord::Base
+          translates name: {mandatory: {locales: -> product { product.get_locales }}}
+
+          def get_locales
+            [:lv, :en]
+          end
+        end
+      end
+
+      it 'has an error for each of the locales returned by proc' do
+        expect(product).not_to be_valid
+        expect(product.errors.count).to eq 2
+        expect(product.errors[:name_lv]).to be_present
+        expect(product.errors[:name_en]).to be_present
+      end
+
+      context 'when translation exists for both of the locales returned by proc' do
+        let!(:translation_lv) { product.translations.build(locale: 'lv', name: 'name-lv') }
+        let!(:translation_en) { product.translations.build(locale: 'en', name: 'name-en') }
+
+        it 'is valid' do
+          expect(product).to be_valid
+        end
+      end
+    end
+  end
+
   describe 'translated attribute' do
     context 'when translations do not exist' do
       specify { expect(product.name).to eq nil }

@@ -70,7 +70,7 @@ module ActiveRecordTranslated
           locales_option = mandatory_option[:locales]
           case locales_option
           when Symbol
-            ActiveRecordTranslated.mandatory_locales.each do |locale|
+            I18n.available_locales.each do |locale|
               validates :"#{attribute_name}_#{locale}", presence: true, if: -> do
                 Array(send(locales_option)).map(&:to_s).include?(locale.to_s)
               end

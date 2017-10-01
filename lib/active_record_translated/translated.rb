@@ -67,17 +67,16 @@ module ActiveRecordTranslated
             validates :"#{attribute_name}_#{locale}", presence: true, unless: -> { send(:"default_#{attribute_name}").present? }
           end
         when Hash
-          mandatory_locales_option = mandatory_option[:locales]
-          if mandatory_locales_option.is_a?(Proc)
+          locales_option = mandatory_option[:locales]
+          case locales_option
+          when Symbol
             ActiveRecordTranslated.mandatory_locales.each do |locale|
               validates :"#{attribute_name}_#{locale}", presence: true, if: -> do
-                mandatory_locales = Array(mandatory_locales_option.call(self)).map(&:to_s)
-                mandatory_locales.include?(locale.to_s)
+                Array(send(locales_option)).map(&:to_s).include?(locale.to_s)
               end
             end
-          elsif mandatory_locales_option.present?
-            mandatory_locales = Array(mandatory_locales_option).map(&:to_s)
-            mandatory_locales.each{ |locale| validates :"#{attribute_name}_#{locale}", presence: true }
+          when String, Array
+            Array(locales_option).map(&:to_s).each{ |locale| validates :"#{attribute_name}_#{locale}", presence: true }
           end
         end
       end

@@ -153,14 +153,14 @@ describe ActiveRecordTranslated::Translated do
   end
 
   context 'when mandatory option is a hash with :locales key' do
-    context 'when the value is a locale' do
+    context 'when the value is a locale as a string' do
       let(:product_class_definition) do
         class Product < ActiveRecord::Base
-          translates name: {mandatory: {locales: :lv}}
+          translates name: {mandatory: {locales: 'lv'}}
         end
       end
 
-      it 'has an error for the locale within locales hash' do
+      it 'has an error for the locale' do
         expect(product).not_to be_valid
         expect(product.errors.count).to eq 1
         expect(product.errors[:name_lv]).to be_present
@@ -175,14 +175,14 @@ describe ActiveRecordTranslated::Translated do
       end
     end
 
-    context 'when the value is an array with locales' do
+    context 'when the value is an array with strings as locales' do
       let(:product_class_definition) do
         class Product < ActiveRecord::Base
-          translates name: {mandatory: {locales: [:lv, :en]}}
+          translates name: {mandatory: {locales: %w(lv en)}}
         end
       end
 
-      it 'has an error for each of the locales' do
+      it 'has an error for each locale' do
         expect(product).not_to be_valid
         expect(product.errors.count).to eq 2
         expect(product.errors[:name_lv]).to be_present
@@ -199,24 +199,24 @@ describe ActiveRecordTranslated::Translated do
       end
     end
 
-    context 'when the value is a proc that returns a locale' do
+    context 'when the value is a symbol as a method that returns a locale' do
       let(:product_class_definition) do
         class Product < ActiveRecord::Base
-          translates name: {mandatory: {locales: -> product { product.get_locale }}}
+          translates name: {mandatory: {locales: :get_locale}}
 
           def get_locale
-            'lv'
+            :lv
           end
         end
       end
 
-      it 'has an error for the locale returned by proc' do
+      it 'has an error for the locale returned by the method' do
         expect(product).not_to be_valid
         expect(product.errors.count).to eq 1
         expect(product.errors[:name_lv]).to be_present
       end
 
-      context 'when translation exists for the locale returned by proc' do
+      context 'when translation exists for the locale returned by the method' do
         let!(:translation_lv) { product.translations.build(locale: 'lv', name: 'name-lv') }
 
         it 'is valid' do
@@ -225,10 +225,10 @@ describe ActiveRecordTranslated::Translated do
       end
     end
 
-    context 'when the value is a proc that returns an array of locales' do
+    context 'when the value is a symbol as a method that returns an array of locales' do
       let(:product_class_definition) do
         class Product < ActiveRecord::Base
-          translates name: {mandatory: {locales: -> product { product.get_locales }}}
+          translates name: {mandatory: {locales: :get_locales}}
 
           def get_locales
             [:lv, :en]
@@ -236,14 +236,14 @@ describe ActiveRecordTranslated::Translated do
         end
       end
 
-      it 'has an error for each of the locales returned by proc' do
+      it 'has an error for each locale returned by the method' do
         expect(product).not_to be_valid
         expect(product.errors.count).to eq 2
         expect(product.errors[:name_lv]).to be_present
         expect(product.errors[:name_en]).to be_present
       end
 
-      context 'when translation exists for both of the locales returned by proc' do
+      context 'when translations exist for the both locales' do
         let!(:translation_lv) { product.translations.build(locale: 'lv', name: 'name-lv') }
         let!(:translation_en) { product.translations.build(locale: 'en', name: 'name-en') }
 

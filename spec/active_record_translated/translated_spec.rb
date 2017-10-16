@@ -370,6 +370,18 @@ describe ActiveRecordTranslated::Translated do
       end
     end
 
+    context 'when updating an existing model translation with an empty attributes' do
+      before do
+        translation_id = product.translations.first.id
+        product.update_attributes!(translations_attributes: [{id: translation_id, locale: 'lv', name: '', description: ''}])
+      end
+
+      it 'updates the transatlion' do
+        translation = product.translations.first
+        expect(translation.name).to eq ''
+        expect(translation.name).to eq ''
+      end
+    end
   end
 
   describe '#translations_for_locales' do

@@ -16,7 +16,7 @@ module ActiveRecordTranslated
         }
 
         accepts_nested_attributes_for :translations, limit: -> { I18n.available_locales.count }, reject_if: -> attributes {
-          !attributes[:id] && attribute_names.none? { |attribute_name| attributes[attribute_name].present? }
+          !attributes[:id].present? && attribute_names.none? { |attribute_name| attributes[attribute_name].present? }
         }
 
         scope :order_by_translation, -> field_name {
